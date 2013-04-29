@@ -17,6 +17,42 @@ import re
 from datetime import datetime
 from  jalali import JalaliToGregorian
 
+smileys = (':)', # smile                1
+           ':(', # sad                  2
+           ';)', # wink                 3
+           ':P', # raz                  4
+           ':lol:', # lol               5
+           ':cry:', #cry                6
+           '',   # heart                7
+           ':oops:', # oops, shy        8
+           '',  # tongue                9
+           '',  # kiss                  10
+           '',  #broken heart           11
+           ':shock:', #shock            12
+           ':mad:', # mad               13
+           ':cool:', # cool             14
+           ':neutral:', # nutral        15
+           ':???:', # ???               16
+           ':evil:', # evil             17
+           '', # bye                    18
+           ':mrgreen:', # ill           19
+           '' # flower                  20
+           )
+
+
+smileyPattern = re.compile('<img src="http://www.blogfa.com/cmt/images/(\d{1,2}).gif">')
+def convertSmileys(str):
+    m = re.search(smileyPattern, str)
+
+    while m != None:
+        print(int(m.group(1)))
+        sm = smileys[int(m.group(1))-1]
+        found = m.group(0)
+        str = str.replace(found, ' ' + sm + ' ')
+        m = re.search(smileyPattern, str)
+
+    return str;
+
 class CommentParser(HTMLParser):
     commentId = 1
     commentAuthor = ""
@@ -35,6 +71,7 @@ class CommentParser(HTMLParser):
 
     def setOutFile(self, of):
         self.outFile=of
+
 
     def handle_starttag(self, tag, attrs):
         if not self.isInCommentBox and tag == "div":
@@ -110,7 +147,7 @@ class CommentParser(HTMLParser):
         self.outFile.write('             <wp:comment_author_IP></wp:comment_author_IP>\n');
         self.outFile.write('             <wp:comment_date>%s</wp:comment_date>\n' % self.convertCommentDate(self.commentDate,));
         self.outFile.write('             <wp:comment_date_gmt>%s</wp:comment_date_gmt>\n' % self.convertCommentDate(self.commentDate,));
-        self.outFile.write('             <wp:comment_content><![CDATA[%s]]></wp:comment_content>\n' % (body,));
+        self.outFile.write('             <wp:comment_content><![CDATA[%s]]></wp:comment_content>\n' % (convertSmileys(body),));
         self.outFile.write('             <wp:comment_approved>1</wp:comment_approved>\n');
         self.outFile.write('             <wp:comment_type/>\n');
         self.outFile.write('             <wp:comment_parent>0</wp:comment_parent>\n');
@@ -266,7 +303,7 @@ class MyHTMLParser(HTMLParser):
         self.outFile.write('        <dc:creator>admin</dc:creator>\n')
         self.outFile.write('        <guid isPermaLink="false">%s</guid>\n' % (self.url + postUrl,))
         self.outFile.write('        <description></description>\n')
-        self.outFile.write('        <content:encoded><![CDATA[%s]]></content:encoded>\n' % (postContent,))
+        self.outFile.write('        <content:encoded><![CDATA[%s]]></content:encoded>\n' % (convertSmileys(postContent),))
         self.outFile.write('        <excerpt:encoded><![CDATA[]]></excerpt:encoded>\n')
         self.outFile.write('        <wp:post_id>%s</wp:post_id>\n' % (postId,))
         self.outFile.write('        <wp:post_date>%s</wp:post_date>\n' % postDateTime.strftime("%Y-%m-%d %H:%M:%S"))
