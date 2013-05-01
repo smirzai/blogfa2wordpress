@@ -45,7 +45,6 @@ def convertSmileys(str):
     m = re.search(smileyPattern, str)
 
     while m != None:
-        print(int(m.group(1)))
         sm = smileys[int(m.group(1))-1]
         found = m.group(0)
         str = str.replace(found, ' ' + sm + ' ')
@@ -66,6 +65,9 @@ class CommentParser(HTMLParser):
     isInCommentAuthor = 0
     isInCommentDate=0
     isInCommentBody=0
+    isInNavbar = 0
+    seenSpan= 0
+    next = ""
 
     levelCommentBox = 0
 
@@ -74,6 +76,8 @@ class CommentParser(HTMLParser):
 
 
     def handle_starttag(self, tag, attrs):
+
+
         if not self.isInCommentBox and tag == "div":
             if attrs:
                 tagsWithBox =[x[1] for x in attrs if x[0]=='class' and x[1]=='box']
@@ -102,6 +106,7 @@ class CommentParser(HTMLParser):
                 if tagsWithBody:
                     self.isInCommentBody = 1
                     return
+
         if self.isInCommentAuthor and tag == 'a':
             if attrs:
                 tagsWithLink =[x[1] for x in attrs if x[0]=='href' ]
@@ -116,9 +121,28 @@ class CommentParser(HTMLParser):
                 self.commentBody += " " + " ".join('%s="%s"' % (k, v) for k, v in attrs)
             self.commentBody += ">"
 
-
         if tag == "div":
             self.divDepth += 1
+
+
+        if self.isInNavbar and tag == "span":
+            self.seenSpan = 1
+            return
+
+        if self.isInNavbar and self.seenSpan and tag == "a" and not self.next:
+            if attrs:
+                tagsWithA =[x[1] for x in attrs if x[0]=='href']
+                if tagsWithA:
+                    self.next = tagsWithA[0]
+
+
+        if tag == "div":
+            if attrs:
+                tagsWithId =[x[1] for x in attrs if x[0]=='id' and x[1] == "navbar"]
+                if tagsWithId:
+                    self.isInNavbar = 1
+
+
 
 
     def convertCommentDate(self, dt):
@@ -186,6 +210,9 @@ class CommentParser(HTMLParser):
 
         if tag=="div":
             self.divDepth -= 1
+
+        if tag == "div" and self.isInNavbar:
+            self.isInNavbar = 0
 
 
     def handle_data(self, data):
@@ -293,6 +320,8 @@ class MyHTMLParser(HTMLParser):
         self.outFile.write('    <generator>http://wordpress.org/?v=3.5.1</generator>\n')
 
     def  outputPost(self, postTitle, postContent, postUrl, postDateTime):
+        if (not postDateTime):
+          postDateTime = datetime.today()
         postId =postUrl[6:-5]
         dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
         monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -320,9 +349,23 @@ class MyHTMLParser(HTMLParser):
         self.outFile.write('        <category domain="category" nicename="uncategorized"><![CDATA[Uncategorized]]></category>\n')
 
 
-        commentsurl = urllib.request.urlopen(self.url + "/comments/?blogid="  +self.blogId + "&postid=" + postId)
-        commentContent = commentsurl.read().decode('utf-8')
-        self.commentParser.feed(commentContent)
+        curl =self.url + "/comments/?blogid="  +self.blogId + "&postid=" + postId
+        while (True):
+            commentsurl = urllib.request.urlopen(curl)
+
+
+
+
+            commentContent = commentsurl.read().decode('utf-8')
+            self.commentParser.feed(commentContent)
+            curl = self.commentParser.next
+            if (curl):
+                curl = self.url + curl
+                self.commentParser.next=""
+            else:
+                break
+
+
 
 
 
@@ -341,6 +384,17 @@ class MyHTMLParser(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         if self.isInCnt:
+            tagsWithId =[x[1] for x in attrs if x[0]=='id' and x[1] == "postdesc"]
+            if (tagsWithId):
+                self.isInInfo = 1
+                self.infoLevel = self.divDepth
+                self.isInCnt = 0
+                self.postContent = self.record
+                self.record = ""
+
+                return
+
+
             self.record +=   "<%s" % (tag,)
             if attrs:
                 self.record += " " + " ".join('%s="%s"' % (k, v) for k, v in attrs)
@@ -372,17 +426,22 @@ class MyHTMLParser(HTMLParser):
 
         tagsWithClass =[x[1] for x in attrs if x[0]=='class']
         if (not tagsWithClass):
-            return
-        cls = tagsWithClass[0]
+            tagsWithId =[x[1] for x in attrs if x[0]=='id']
+            if (tagsWithId):
+                cls = tagsWithId[0]
+            else:
+              return
+        else:
+          cls = tagsWithClass[0]
 
 
         if cls == "post":
             self.isInPost = 1
             self.postLevel = self.divDepth
-        elif cls == "cnt":
+        elif cls == "cnt" :
             self.isInCnt = 1
             self.cntLevel = self.divDepth
-        elif cls == "info":
+        elif cls == "info" :
             self.isInInfo = 1
             self.infoLevel = self.divDepth
 
@@ -477,7 +536,8 @@ class MyHTMLParser(HTMLParser):
 
 
 if __name__ == '__main__':
-    MyHTMLParser().parsePage('http://saeedmirzai.blogfa.com')
-    dc = JalaliToGregorian(1391, 5, 2)
 
-    print(dc.gyear, dc.gmonth, dc.gday)
+
+   MyHTMLParser().parsePage('http://saeedmirzai.blogfa.com')
+ #    MyHTMLParser().parsePage('http://shirazi.blogfa.com/')
+
