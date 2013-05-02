@@ -360,8 +360,9 @@ class MyHTMLParser(HTMLParser):
             self.commentParser.feed(commentContent)
             curl = self.commentParser.next
             if (curl):
-                curl = self.url + curl
+                curl = self.url + "/comments/" +curl
                 self.commentParser.next=""
+                self.commentParser.seenSpan = 0
             else:
                 break
 
