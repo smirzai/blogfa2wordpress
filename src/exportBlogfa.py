@@ -52,6 +52,151 @@ def convertSmileys(str):
 
     return str;
 
+
+outFile = ""
+
+def outputStart(title):
+
+    outFile.write('<?xml version="1.0" encoding="UTF-8" ?>\n')
+    outFile.write('<rss version="2.0\n');
+    outFile.write('    xmlns:excerpt="http://wordpress.org/export/1.2/excerpt/"\n');
+    outFile.write('    xmlns:content="http://purl.org/rss/1.0/modules/content/"\n');
+    outFile.write('    xmlns:wfw="http://wellformedweb.org/CommentAPI/"\n');
+    outFile.write('    xmlns:dc="http://purl.org/dc/elements/1.1/"\n');
+    outFile.write('    xmlns:wp="http://wordpress.org/export/1.2/"\n');
+    outFile.write('>\n');
+
+
+
+    outFile.write('<channel>\n');
+    outFile.write('	<title>' + title + '</title>\n')
+    outFile.write('    <link>http://blog.saeidmirzaei.com</link>\n')
+    outFile.write('    <description>Just another WordPress site</description>\n')
+    outFile.write('    <pubDate>Sun, 21 Apr 2013 11:12:28 +0000</pubDate>\n')
+    outFile.write('    <language>en-US</language>\n')
+    outFile.write('    <wp:wxr_version>1.2</wp:wxr_version>\n')
+    outFile.write('    <wp:base_site_url>http://blog.saeidmirzaei.com</wp:base_site_url>\n')
+    outFile.write('    <wp:base_blog_url>http://blog.saeidmirzaei.com</wp:base_blog_url>\n')
+
+    outFile.write('    <wp:author><wp:author_id>1</wp:author_id><wp:author_login>admin</wp:author_login><wp:author_email>smirzai@gmail.com</wp:author_email><wp:author_display_name><![CDATA[admin]]></wp:author_display_name><wp:author_first_name><![CDATA[]]></wp:author_first_name><wp:author_last_name><![CDATA[]]></wp:author_last_name></wp:author>\n')
+
+    outFile.write('    <wp:category><wp:term_id>1</wp:term_id><wp:category_nicename>uncategorized</wp:category_nicename><wp:category_parent></wp:category_parent><wp:cat_name><![CDATA[Uncategorized]]></wp:cat_name></wp:category>\n')
+
+    outFile.write('    <generator>http://wordpress.org/?v=3.5.1</generator>\n')
+
+
+def outputEnd():
+    outFile.write('</channel>\n');
+    outFile.write('</rss>\n');
+    outFile.flush()
+
+class PostListParser(HTMLParser):
+    isInTitle = 0
+    titleWritten =  0
+    postTitle = ""
+    isInResult = 0
+    resultDepth = 0
+    url = ""
+    divDepth = 0
+    seenSpan = 0
+    isInNavBar = 0
+    navBarDepth = 0
+    next = ""
+
+
+    def parsePage(self, urll):
+
+        self.url = urll
+        u = urll + "/posts/"
+        while (True):
+            data = urllib.request.urlopen(u)
+            content = data.read().decode('utf-8')
+            self.feed(content)
+            if (not self.next):
+                break;
+            u = urll + "/posts/" + self.next
+            self.next = ""
+        outputEnd()
+        outFile.close
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "title":
+            self.isInTitle = 1
+            return;
+
+        if tag == "div":
+            self.divDepth += 1
+
+
+        if tag== "div" and not self.isInResult:
+             if attrs:
+                tagsWithHref =[x[1] for x in attrs if x[0]=='id' and x[1]=="result"]
+                if tagsWithHref:
+                    self.isInResult = 1
+                    self.resultDepth = self.divDepth
+                    return
+
+        if tag== "div" and  self.isInResult:
+                tagsWithHref =[x[1] for x in attrs if x[0]=='id' and x[1]=="navbar"]
+                if tagsWithHref:
+                    self.isInNavBar = 1
+                    self.navBarDepth = self.divDepth
+                    return
+
+
+        if tag == "a" and self.seenSpan and self.isInNavBar:
+            if attrs:
+                tagsWithId =[x[1] for x in attrs if x[0]=='href']
+                if tagsWithId:
+                    self.next = tagsWithId[0]
+                    self.seenSpan = 0
+                    self.isInNavBar = 0
+
+                    return
+
+
+        if tag =="a" and self.isInResult:
+            if attrs:
+                tagsWithId =[x[1] for x in attrs if x[0]=='href']
+                if tagsWithId:
+
+                    if not tagsWithId[0].startswith("?p="):
+                        print(tagsWithId)
+                        MyHTMLParser().parsePage(self.url, tagsWithId[0])
+
+                    return
+
+        if tag == "span" and self.isInNavBar:
+            self.seenSpan = 1
+            return
+
+
+
+
+    def handle_data(self, data):
+        if self.isInTitle:
+            self.postTitle = data;
+            if (not self.titleWritten):
+                outputStart(self.postTitle)
+                self.titleWritten = 1
+
+
+    def handle_endtag(self, tag):
+        if tag == "title":
+            self.isInTitle = 0
+            return
+
+        if tag == "div":
+            if self.divDepth == self.resultDepth:
+                self.isInResult = 0
+            if self.divDepth == self.navBarDepth:
+                self.isInNavBar = 0
+
+        if tag =="div":
+            self.divDepth -= 1
+
+
+
 class CommentParser(HTMLParser):
     commentId = 1
     commentAuthor = ""
@@ -71,8 +216,6 @@ class CommentParser(HTMLParser):
 
     levelCommentBox = 0
 
-    def setOutFile(self, of):
-        self.outFile=of
 
 
     def handle_starttag(self, tag, attrs):
@@ -163,20 +306,20 @@ class CommentParser(HTMLParser):
         print(commentTime)
 
     def outputComment(self, author, authorUrl, date, body):
-        self.outFile.write('        <wp:comment>\n');
-        self.outFile.write('             <wp:comment_id>%s</wp:comment_id>\n' % (str(self.commentId),));
-        self.outFile.write('             <wp:comment_author><![CDATA[%s]]></wp:comment_author>\n' % (author,));
-        self.outFile.write('             <wp:comment_author_email/>\n');
-        self.outFile.write('             <wp:comment_author_url>%s</wp:comment_author_url>\n' % (authorUrl,));
-        self.outFile.write('             <wp:comment_author_IP></wp:comment_author_IP>\n');
-        self.outFile.write('             <wp:comment_date>%s</wp:comment_date>\n' % self.convertCommentDate(self.commentDate,));
-        self.outFile.write('             <wp:comment_date_gmt>%s</wp:comment_date_gmt>\n' % self.convertCommentDate(self.commentDate,));
-        self.outFile.write('             <wp:comment_content><![CDATA[%s]]></wp:comment_content>\n' % (convertSmileys(body),));
-        self.outFile.write('             <wp:comment_approved>1</wp:comment_approved>\n');
-        self.outFile.write('             <wp:comment_type/>\n');
-        self.outFile.write('             <wp:comment_parent>0</wp:comment_parent>\n');
-        self.outFile.write('             <wp:comment_user_id>0</wp:comment_user_id>\n');
-        self.outFile.write('        </wp:comment>\n');
+        outFile.write('        <wp:comment>\n');
+        outFile.write('             <wp:comment_id>%s</wp:comment_id>\n' % (str(self.commentId),));
+        outFile.write('             <wp:comment_author><![CDATA[%s]]></wp:comment_author>\n' % (author,));
+        outFile.write('             <wp:comment_author_email/>\n');
+        outFile.write('             <wp:comment_author_url>%s</wp:comment_author_url>\n' % (authorUrl,));
+        outFile.write('             <wp:comment_author_IP></wp:comment_author_IP>\n');
+        outFile.write('             <wp:comment_date>%s</wp:comment_date>\n' % self.convertCommentDate(self.commentDate,));
+        outFile.write('             <wp:comment_date_gmt>%s</wp:comment_date_gmt>\n' % self.convertCommentDate(self.commentDate,));
+        outFile.write('             <wp:comment_content><![CDATA[%s]]></wp:comment_content>\n' % (convertSmileys(body),));
+        outFile.write('             <wp:comment_approved>1</wp:comment_approved>\n');
+        outFile.write('             <wp:comment_type/>\n');
+        outFile.write('             <wp:comment_parent>0</wp:comment_parent>\n');
+        outFile.write('             <wp:comment_user_id>0</wp:comment_user_id>\n');
+        outFile.write('        </wp:comment>\n');
         self.commentId +=1
 
 
@@ -227,10 +370,10 @@ class CommentParser(HTMLParser):
 
 
 class MyHTMLParser(HTMLParser):
+    global outFile;
 
     outFile = open('d:\output.xml', "w",encoding='utf-8')
     commentParser = CommentParser()
-    commentParser.setOutFile(outFile)
 
 # date
     blogTitle = ""
@@ -290,34 +433,6 @@ class MyHTMLParser(HTMLParser):
 
 
 
-    def outputStart(self, title):
-
-        self.outFile.write('<?xml version="1.0" encoding="UTF-8" ?>\n')
-        self.outFile.write('<rss version="2.0\n');
-        self.outFile.write('    xmlns:excerpt="http://wordpress.org/export/1.2/excerpt/"\n');
-        self.outFile.write('    xmlns:content="http://purl.org/rss/1.0/modules/content/"\n');
-        self.outFile.write('    xmlns:wfw="http://wellformedweb.org/CommentAPI/"\n');
-        self.outFile.write('    xmlns:dc="http://purl.org/dc/elements/1.1/"\n');
-        self.outFile.write('    xmlns:wp="http://wordpress.org/export/1.2/"\n');
-        self.outFile.write('>\n');
-
-
-
-        self.outFile.write('<channel>\n');
-        self.outFile.write('	<title>' + title + '</title>\n')
-        self.outFile.write('    <link>http://blog.saeidmirzaei.com</link>\n')
-        self.outFile.write('    <description>Just another WordPress site</description>\n')
-        self.outFile.write('    <pubDate>Sun, 21 Apr 2013 11:12:28 +0000</pubDate>\n')
-        self.outFile.write('    <language>en-US</language>\n')
-        self.outFile.write('    <wp:wxr_version>1.2</wp:wxr_version>\n')
-        self.outFile.write('    <wp:base_site_url>http://blog.saeidmirzaei.com</wp:base_site_url>\n')
-        self.outFile.write('    <wp:base_blog_url>http://blog.saeidmirzaei.com</wp:base_blog_url>\n')
-
-        self.outFile.write('    <wp:author><wp:author_id>1</wp:author_id><wp:author_login>admin</wp:author_login><wp:author_email>smirzai@gmail.com</wp:author_email><wp:author_display_name><![CDATA[admin]]></wp:author_display_name><wp:author_first_name><![CDATA[]]></wp:author_first_name><wp:author_last_name><![CDATA[]]></wp:author_last_name></wp:author>\n')
-
-        self.outFile.write('    <wp:category><wp:term_id>1</wp:term_id><wp:category_nicename>uncategorized</wp:category_nicename><wp:category_parent></wp:category_parent><wp:cat_name><![CDATA[Uncategorized]]></wp:cat_name></wp:category>\n')
-
-        self.outFile.write('    <generator>http://wordpress.org/?v=3.5.1</generator>\n')
 
     def  outputPost(self, postTitle, postContent, postUrl, postDateTime):
         if (not postDateTime):
@@ -325,28 +440,28 @@ class MyHTMLParser(HTMLParser):
         postId =postUrl[6:-5]
         dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
         monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-        self.outFile.write('    <item>\n')
-        self.outFile.write('        <title>%s</title>\n' % (postTitle,))
-        self.outFile.write('        <link>%s</link>\n' % (self.url +  postUrl,))
-        self.outFile.write('        <pubDate>%s, %s %s %s +0000</pubDate>\n' % (dayNames[int(postDateTime.strftime("%w"))],postDateTime.strftime("%d"), monthNames[int(postDateTime.strftime("%m"))-1], postDateTime.strftime(" %Y  %H:%M:%S")),)
-        self.outFile.write('        <dc:creator>admin</dc:creator>\n')
-        self.outFile.write('        <guid isPermaLink="false">%s</guid>\n' % (self.url + postUrl,))
-        self.outFile.write('        <description></description>\n')
-        self.outFile.write('        <content:encoded><![CDATA[%s]]></content:encoded>\n' % (convertSmileys(postContent),))
-        self.outFile.write('        <excerpt:encoded><![CDATA[]]></excerpt:encoded>\n')
-        self.outFile.write('        <wp:post_id>%s</wp:post_id>\n' % (postId,))
-        self.outFile.write('        <wp:post_date>%s</wp:post_date>\n' % postDateTime.strftime("%Y-%m-%d %H:%M:%S"))
-        self.outFile.write('        <wp:post_date_gmt>%s</wp:post_date_gmt>\n'% postDateTime.strftime("%Y-%m-%d %H:%M:%S"))
-        self.outFile.write('        <wp:comment_status>open</wp:comment_status>\n')
-        self.outFile.write('        <wp:ping_status>open</wp:ping_status>\n')
-        self.outFile.write('        <wp:post_name>%s</wp:post_name>\n' % (postTitle,))
-        self.outFile.write('        <wp:status>publish</wp:status>\n')
-        self.outFile.write('        <wp:post_parent>0</wp:post_parent>\n')
-        self.outFile.write('        <wp:menu_order>0</wp:menu_order>\n')
-        self.outFile.write('        <wp:post_type>post</wp:post_type>\n')
-        self.outFile.write('        <wp:post_password></wp:post_password>\n')
-        self.outFile.write('        <wp:is_sticky>0</wp:is_sticky>\n')
-        self.outFile.write('        <category domain="category" nicename="uncategorized"><![CDATA[Uncategorized]]></category>\n')
+        outFile.write('    <item>\n')
+        outFile.write('        <title>%s</title>\n' % (postTitle,))
+        outFile.write('        <link>%s</link>\n' % (self.url +  postUrl,))
+        outFile.write('        <pubDate>%s, %s %s %s +0000</pubDate>\n' % (dayNames[int(postDateTime.strftime("%w"))],postDateTime.strftime("%d"), monthNames[int(postDateTime.strftime("%m"))-1], postDateTime.strftime(" %Y  %H:%M:%S")),)
+        outFile.write('        <dc:creator>admin</dc:creator>\n')
+        outFile.write('        <guid isPermaLink="false">%s</guid>\n' % (self.url + postUrl,))
+        outFile.write('        <description></description>\n')
+        outFile.write('        <content:encoded><![CDATA[%s]]></content:encoded>\n' % (convertSmileys(postContent),))
+        outFile.write('        <excerpt:encoded><![CDATA[]]></excerpt:encoded>\n')
+        outFile.write('        <wp:post_id>%s</wp:post_id>\n' % (postId,))
+        outFile.write('        <wp:post_date>%s</wp:post_date>\n' % postDateTime.strftime("%Y-%m-%d %H:%M:%S"))
+        outFile.write('        <wp:post_date_gmt>%s</wp:post_date_gmt>\n'% postDateTime.strftime("%Y-%m-%d %H:%M:%S"))
+        outFile.write('        <wp:comment_status>open</wp:comment_status>\n')
+        outFile.write('        <wp:ping_status>open</wp:ping_status>\n')
+        outFile.write('        <wp:post_name>%s</wp:post_name>\n' % (postTitle,))
+        outFile.write('        <wp:status>publish</wp:status>\n')
+        outFile.write('        <wp:post_parent>0</wp:post_parent>\n')
+        outFile.write('        <wp:menu_order>0</wp:menu_order>\n')
+        outFile.write('        <wp:post_type>post</wp:post_type>\n')
+        outFile.write('        <wp:post_password></wp:post_password>\n')
+        outFile.write('        <wp:is_sticky>0</wp:is_sticky>\n')
+        outFile.write('        <category domain="category" nicename="uncategorized"><![CDATA[Uncategorized]]></category>\n')
 
 
         curl =self.url + "/comments/?blogid="  +self.blogId + "&postid=" + postId
@@ -368,18 +483,11 @@ class MyHTMLParser(HTMLParser):
 
 
 
+        outFile.write('    </item>\n')
+        outFile.flush()
 
 
 
-        self.outFile.write('    </item>\n')
-        self.outFile.flush()
-
-
-
-    def outputEnd(self):
-        self.outFile.write('</channel>\n');
-        self.outFile.write('</rss>\n');
-        self.outFile.flush()
 
 
 
@@ -485,6 +593,7 @@ class MyHTMLParser(HTMLParser):
 
             self.getDateFromPostInfo(self.postInfo)
             self.postInfo = ""
+
             self.outputPost(self.postTitle, self.postContent, self.postUrl, self.postDateTime)
 
         elif self.isInPost and self.postLevel == self.divDepth:
@@ -499,7 +608,7 @@ class MyHTMLParser(HTMLParser):
 
         if self.isInTitle==1 and self.blogTitle == "":
             self.blogTitle = data
-            self.outputStart(self.blogTitle)
+#            outputStart(self.blogTitle)
             return
 
         if self.isInPostTitle:
@@ -518,12 +627,11 @@ class MyHTMLParser(HTMLParser):
             self.getBlogIdFromInfo(data)
 
 
-    def  parsePage(self, urll):
+    def  parsePage(self, urll, post):
 
-        self.tb = etree.TreeBuilder()
         self.url = urll
 
-        data = urllib.request.urlopen(urll)
+        data = urllib.request.urlopen(urll + post)
         content = data.read().decode('utf-8')
 
 
@@ -531,14 +639,12 @@ class MyHTMLParser(HTMLParser):
 
         self.feed(content)
 
-        self.outputEnd()
-        self.outFile.close
 
 
 
 if __name__ == '__main__':
 
 
-   MyHTMLParser().parsePage('http://saeedmirzai.blogfa.com')
+   PostListParser().parsePage('http://saeedmirzai.blogfa.com')
  #    MyHTMLParser().parsePage('http://shirazi.blogfa.com/')
 
