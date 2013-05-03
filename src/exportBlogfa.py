@@ -10,12 +10,13 @@
 # Created:     21.04.2013
 # Copyright:   (c) Saeid Mirzaei 2013
 #-------------------------------------------------------------------------------
-from html.parser import HTMLParser
-import urllib.request
+from HTMLParser import HTMLParser
+import urllib2
 from lxml import etree
 import re
 from datetime import datetime
 from  jalali import JalaliToGregorian
+import codecs
 
 smileys = (':)', # smile                1
            ':(', # sad                  2
@@ -109,7 +110,7 @@ class PostListParser(HTMLParser):
         self.url = urll
         u = urll + "/posts/"
         while (True):
-            data = urllib.request.urlopen(u)
+            data = urllib2.urlopen(u)
             content = data.read().decode('utf-8')
             self.feed(content)
             if (not self.next):
@@ -289,7 +290,7 @@ class CommentParser(HTMLParser):
 
 
     def convertCommentDate(self, dt):
-        months=('فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند')
+        months=(u'فروردین', u'اردیبهشت', u'خرداد', u'تیر', u'مرداد', u'شهریور', u'مهر', u'آبان', u'آذر', u'دی', u'بهمن', u'اسفند')
         dt = dt.translate(dict((ord(x), y) for (x, y) in zip('۰۱۲۳۴۵۶۷۸۹', '0123456789')))
         tokens = re.split(' ', dt)
         if len(tokens) == 6:
@@ -372,7 +373,7 @@ class CommentParser(HTMLParser):
 class MyHTMLParser(HTMLParser):
     global outFile;
 
-    outFile = open('d:\output.xml', "w",encoding='utf-8')
+    outFile = codecs.open('d:\output.xml', "w",  'utf-8')
     commentParser = CommentParser()
 
 # date
@@ -466,7 +467,7 @@ class MyHTMLParser(HTMLParser):
 
         curl =self.url + "/comments/?blogid="  +self.blogId + "&postid=" + postId
         while (True):
-            commentsurl = urllib.request.urlopen(curl)
+            commentsurl = urllib2.urlopen(curl)
 
 
 
@@ -631,7 +632,7 @@ class MyHTMLParser(HTMLParser):
 
         self.url = urll
 
-        data = urllib.request.urlopen(urll + post)
+        data = urllib2.urlopen(urll + post)
         content = data.read().decode('utf-8')
 
 
