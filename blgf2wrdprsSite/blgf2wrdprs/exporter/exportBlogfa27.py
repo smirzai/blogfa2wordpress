@@ -643,9 +643,10 @@ class MyHTMLParser(HTMLParser):
 
 
 
-if __name__ == '__main__':
 
-
-   PostListParser().parsePage('http://saeedmirzai.blogfa.com')
+def extractSite(name):
+   siteFullName = 'http://' + name + ".blogfa.com"; 
+   print ("site full name=", siteFullName)
+   PostListParser().parsePage(siteFullName)
  #    MyHTMLParser().parsePage('http://shirazi.blogfa.com/')
 

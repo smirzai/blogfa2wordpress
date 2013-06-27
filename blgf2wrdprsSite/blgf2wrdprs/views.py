@@ -8,6 +8,7 @@ def contact(request):
         form = ContactForm(request.POST) # A form bound to the POST data
         if form.is_valid(): # All validation rules pass
             print form.cleaned_data["email"]
+            extractSite(form.cleaned_data["website"]);
             # Process the data in form.cleaned_data
             # ...
             return HttpResponseRedirect('/blogfa2wordpress/thanks') # Redirect after POST
