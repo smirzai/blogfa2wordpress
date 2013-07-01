@@ -54,10 +54,10 @@ def convertSmileys(str):
     return str;
 
 
+
 outFile = ""
 
 def outputStart(title):
-
     outFile.write('<?xml version="1.0" encoding="UTF-8" ?>\n')
     outFile.write('<rss version="2.0\n');
     outFile.write('    xmlns:excerpt="http://wordpress.org/export/1.2/excerpt/"\n');
@@ -103,10 +103,13 @@ class PostListParser(HTMLParser):
     isInNavBar = 0
     navBarDepth = 0
     next = ""
-
+  
+    def setOutFile(self, name):
+        global outFile
+        outFile = codecs.open(name, "w",  'utf-8')
+        print(outFile)
 
     def parsePage(self, urll):
-
         self.url = urll
         u = urll + "/posts/"
         while (True):
@@ -372,8 +375,7 @@ class CommentParser(HTMLParser):
 
 class MyHTMLParser(HTMLParser):
     global outFile;
-
-    outFile = codecs.open('d:\output.xml', "w",  'utf-8')
+ 
     commentParser = CommentParser()
 
 # date
@@ -584,7 +586,6 @@ class MyHTMLParser(HTMLParser):
 
 
 
-
         if tag != "div":
            return
 
@@ -646,7 +647,10 @@ class MyHTMLParser(HTMLParser):
 
 def extractSite(name):
    siteFullName = 'http://' + name + ".blogfa.com"; 
+
    print ("site full name=", siteFullName)
-   PostListParser().parsePage(siteFullName)
+   parser = PostListParser()
+   parser.setOutFile(name + ".xml")
+   parser.parsePage(siteFullName)
  #    MyHTMLParser().parsePage('http://shirazi.blogfa.com/')
 
