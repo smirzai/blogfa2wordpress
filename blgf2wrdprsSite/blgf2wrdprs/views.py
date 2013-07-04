@@ -3,6 +3,7 @@ from django.http import HttpResponseRedirect
 from blgf2wrdprs.forms import ContactForm
 from blgf2wrdprs.exporter.exportBlogfa27  import *
 import zipfile
+from blgf2wrdprs.exporter.mailer import *
 
 
 def compressFile(name):
@@ -14,10 +15,12 @@ def contact(request):
     if request.method == 'POST': # If the form has been submitted...
         form = ContactForm(request.POST) # A form bound to the POST data
         if form.is_valid(): # All validation rules pass
-            print form.cleaned_data["email"]
+            email =  form.cleaned_data["email"]
             siteName = form.cleaned_data["website"]
-            extractSite(siteName)
-            compressFile(siteName)
+          #  extractSite(siteName)
+          #  compressFile(siteName)
+            sendEmail(email, "blogfa2wordpress@saeidmirzaei.com", "message.txt", siteName + ".zip")
+
             
             # Process the data in form.cleaned_data
             # ...
