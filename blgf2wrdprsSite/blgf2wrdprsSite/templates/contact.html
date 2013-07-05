@@ -1,4 +1,23 @@
 <form action="/blogfa2wordpress/contact" method="post">{% csrf_token %}
-{{ form.as_p }}
+
+   {{ form.non_field_errors }}
+    <div class="fieldWrapper">
+        {{ form.website.errors }}
+        <label for="id_website">Web site:</label>
+        {{ form.subject }}
+    </div>
+    <div class="fieldWrapper">
+        {{ form.email.errors }}
+        <label for="id_email">Email:</label>
+        {{ form.email }}
+    </div>
+    <div class="fieldWrapper">
+        {{ form.comment.errors }}
+        <label for="id_comment">Comment:</label>
+        {{ form.comment }}
+    </div>
+    <p><input type="submit" value="Send message" /></p>
+</form>
+
 <input type="submit" value="Submit" />
 </form>
