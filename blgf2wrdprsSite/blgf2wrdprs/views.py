@@ -1,9 +1,10 @@
+
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from blgf2wrdprs.forms import ContactForm
 from blgf2wrdprs.exporter.exportBlogfa27  import *
-import zipfile
 from blgf2wrdprs.exporter.mailer import *
+import zipfile
 
 
 def compressFile(name):
@@ -17,9 +18,9 @@ def contact(request):
         if form.is_valid(): # All validation rules pass
             email =  form.cleaned_data["email"]
             siteName = form.cleaned_data["website"]
-          #  extractSite(siteName)
-          #  compressFile(siteName)
-            sendEmail(email, "blogfa2wordpress@saeidmirzaei.com", "message.txt", siteName + ".zip")
+            extractSite(siteName)
+            compressFile(siteName)
+            sendEmail(email,   siteName )
 
             
             # Process the data in form.cleaned_data
