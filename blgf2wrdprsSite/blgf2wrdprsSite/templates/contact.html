@@ -1,23 +1,52 @@
-<form action="/blogfa2wordpress/contact" method="post">{% csrf_token %}
+<html xmlns="http://www.w3.org/1999/xhtml" debug="true" DIR="RTL">
 
-   {{ form.non_field_errors }}
-    <div class="fieldWrapper">
-        {{ form.website.errors }}
-        <label for="id_website">Web site:</label>
-        {{ form.website }}
-    </div>
-    <div class="fieldWrapper">
-        {{ form.email.errors }}
-        <label for="id_email">Email:</label>
-        {{ form.email }}
-    </div>
-    <div class="fieldWrapper">
-        {{ form.comment.errors }}
-        <label for="id_comment">Comment:</label>
-        {{ form.comment }}
-    </div>
-    <p><input type="submit" value="Send message" /></p>
-</form>
+	<head>
+	   <title>Blogfa to Wordpress Convertor</title>
+	</head>
+	<body> 
+		<form action="/blogfa2wordpress/contact" method="post">{% csrf_token %}
+			    <div class="fieldWrapper">
 
-<input type="submit" value="Submit" />
-</form>
+			<table>
+				<tr>
+			  		<td align="right"> 
+			       	{{ form.non_field_errors }}
+			 	 	</td>
+			  		<td align="left">
+			        {{ form.website.errors }}
+			        <label for="id_website">نام وبلاگ در بلاگفا:</label>
+			        {{ form.website }}
+			  		</td>
+			 	</tr>
+			 	<tr>
+			 		<td align="right"> 
+			 
+			        {{ form.email.errors }}
+			 		</td>
+			  		<td align="left">
+			        <label for="id_email">پست  الکترونیکی:</label>
+			        {{ form.email }}
+			  		</td>
+			 	</tr>
+			 	<tr>
+			 		<td align="right">
+			        {{ form.comment.errors }}
+			      </td>
+			      <td align="left">
+			        <label for="id_comment">توضیحات:</label>
+			        {{ form.comment }}
+			      </td>
+			    </tr>
+			    <tr>
+			  		<td align="left">
+			    		<p><input type="submit" value="Send message" /></p>
+			    	</td>
+			    </tr>
+		    </table>
+		    </div>
+
+		</form>
+	</body>
+</html>
+
+
