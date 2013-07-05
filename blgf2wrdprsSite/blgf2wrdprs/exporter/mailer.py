@@ -20,7 +20,7 @@ def sendEmail(you, website ):
    msg['Date'] = formatdate(localtime=True)
    msg['Subject'] = u"فایل پشتیبان از وبلاگ " + website;
    
-   textFile = file(website + ".zip")
+   textFile = file("textMessage.txt")
    text = textFile.read()
    
 
