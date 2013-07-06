@@ -1,33 +1,68 @@
 <html xmlns="http://www.w3.org/1999/xhtml" debug="true" DIR="RTL">
 
 	<head>
-	   <title>Blogfa to Wordpress Convertor</title>
+	   <title>انتقال وبلاگ از بلاگفا به وردپرس</title>
 	</head>
+	<style>
+	   .header {
+			  background-color:#3388CC;
+			  background-position:initial initial;
+			  background-repeat:initial initial;
+			  height:80px;
+			  margin:0;
+			  padding:0;
+			  position:relative;
+			  
+			  
+			  color:white;
+			  font-family:Arial;
+			  font-size:18pt;
+			  font-weight:bold;
+			  text-align:center;
+			  padding-top:40px;
+			  position:relative;
+			   margin:0;
+			   text-align:center;
+         }
+      .error {
+          color:red;
+          vertical-align:middle;
+         
+       }
+         
+       
+	</style>
+	
 	<body> 
+	   <div class="header"> انتقال  وبلاگ از بلاگفا به وردپرس
+	   </div>
+	     یی
 		<form action="/blogfa2wordpress/contact" method="post">{% csrf_token %}
 			    <div class="fieldWrapper">
 
 			<table>
 				<tr>
-			  		<td align="right"> 
-			       	{{ form.non_field_errors }}
-			 	 	</td>
 			  		<td align="left">
 			        {{ form.website.errors }}
 			        <label for="id_website">نام وبلاگ در بلاگفا:</label>
 			        {{ form.website }}
 			  		</td>
+			  		<td align="right" class="error">
+			  		    
+			       	{{ form.non_field_errors }}
+			 	 	</td>
 			 	</tr>
 			 	<tr>
-			 		<td align="right"> 
-			 
-			        {{ form.email.errors }}
-			 		</td>
 			  		<td align="left">
 			        <label for="id_email">پست  الکترونیکی:</label>
 			        {{ form.email }}
 			  		</td>
+			 		<td align="right" class="error"> 
+			 
+			        {{ form.email.errors }}
+			 		</td>
 			 	</tr>
+			 	<!--
 			 	<tr>
 			 		<td align="right">
 			        {{ form.comment.errors }}
@@ -37,6 +72,7 @@
 			        {{ form.comment }}
 			      </td>
 			    </tr>
+			    -->
 			    <tr>
 			  		<td align="left">
 			    		<p><input type="submit" value="Send message" /></p>
