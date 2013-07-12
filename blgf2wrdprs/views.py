@@ -1,4 +1,5 @@
-
+# -*- coding: UTF-8 -*-
+ 
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from blgf2wrdprs.forms import ContactForm
@@ -19,11 +20,14 @@ def contact(request):
             email =  form.cleaned_data["email"]
             siteName = form.cleaned_data["website"]
             fileName = "/tmp/" + siteName
-            extractSite(siteName, fileName)
+            try:
+               extractSite(siteName, fileName)
+            except (urllib2.HTTPError, UnicodeEncodeError):
+               print "Error site cannot be read"   
+               return render (request, 'error.html', { 'errorMessage': u'وبلاگ %s.blogfa.ir یافت نشد.' % siteName})
+            
             compressFile(fileName, siteName)
             sendEmail(email,   fileName, siteName )
-
-            
             # Process the data in form.cleaned_data
             # ...
             return HttpResponseRedirect('/blogfa2wordpress/thanks') # Redirect after POST
