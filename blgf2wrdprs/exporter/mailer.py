@@ -10,7 +10,7 @@ from email import Encoders
 
 
 
-def sendEmail(you, website ):
+def sendEmail(you, fileName, website ):
    me = "blogfa2wordpress@saeidmirzaei.com"
 
    msg = MIMEMultipart()
@@ -25,7 +25,7 @@ def sendEmail(you, website ):
    text = textFile.read()
    
 
-   f = file(website+ ".zip", "rb")
+   f = file(fileName+ ".zip", "rb")
    msg.attach(MIMEText(text))
    part = MIMEBase('application', "octet-stream")
    part.set_payload( f.read() )

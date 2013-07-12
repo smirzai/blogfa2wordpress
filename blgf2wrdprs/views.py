@@ -21,7 +21,7 @@ def contact(request):
             fileName = "/tmp/" + siteName
             extractSite(siteName, fileName)
             compressFile(fileName)
-            sendEmail(email,   fileName )
+            sendEmail(email,   fileName, siteName )
 
             
             # Process the data in form.cleaned_data
