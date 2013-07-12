@@ -12,15 +12,16 @@ from email import Encoders
 
 def sendEmail(you, website ):
    me = "blogfa2wordpress@saeidmirzaei.com"
-   print "I am in mailer"
 
    msg = MIMEMultipart()
    msg['From'] = me
    msg['To'] = you
    msg['Date'] = formatdate(localtime=True)
    msg['Subject'] = u"فایل پشتیبان از وبلاگ " + website;
+
+   this_directory = os.path.dirname(__file__)
    
-   textFile = file("textMessage.txt")
+   textFile = file(os.path.join(this_directory, '../../textMessage.txt'))
    text = textFile.read()
    
 
