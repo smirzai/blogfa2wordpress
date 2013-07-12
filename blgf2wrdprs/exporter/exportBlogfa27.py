@@ -645,12 +645,12 @@ class MyHTMLParser(HTMLParser):
 
 
 
-def extractSite(name):
+def extractSite(name, fileName):
    siteFullName = 'http://' + name + ".blogfa.com"; 
 
    print ("site full name=", siteFullName)
    parser = PostListParser()
-   parser.setOutFile(name + ".xml")
+   parser.setOutFile(fileName + ".xml")
    parser.parsePage(siteFullName)
  #    MyHTMLParser().parsePage('http://shirazi.blogfa.com/')
 

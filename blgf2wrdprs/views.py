@@ -18,9 +18,10 @@ def contact(request):
         if form.is_valid(): # All validation rules pass
             email =  form.cleaned_data["email"]
             siteName = form.cleaned_data["website"]
-            extractSite(siteName)
-            compressFile(siteName)
-            sendEmail(email,   siteName )
+            fileName = "/tmp/" + siteName
+            extractSite(siteName, fileName)
+            compressFile(fileName)
+            sendEmail(email,   fileName )
 
             
             # Process the data in form.cleaned_data
