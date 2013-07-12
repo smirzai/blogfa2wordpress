@@ -7,9 +7,9 @@ from blgf2wrdprs.exporter.mailer import *
 import zipfile
 
 
-def compressFile(name):
+def compressFile(name, siteName):
    zippedFile = zipfile.ZipFile(name + ".zip", "w")
-   zippedFile.write(name + ".xml")
+   zippedFile.write(name + ".xml", siteName + ".xml")
    zippedFile.close()
  
 def contact(request):
@@ -20,7 +20,7 @@ def contact(request):
             siteName = form.cleaned_data["website"]
             fileName = "/tmp/" + siteName
             extractSite(siteName, fileName)
-            compressFile(fileName)
+            compressFile(fileName, siteName)
             sendEmail(email,   fileName, siteName )
 
             
