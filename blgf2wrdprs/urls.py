@@ -5,6 +5,6 @@ from blgf2wrdprs.views import  contact
 from blgf2wrdprs.views import thanks
 
 urlpatterns = patterns('',
-    url(r'^contact$',  contact),
+    url(r'^$',  contact),
     url(r'^thanks$', thanks)
 )

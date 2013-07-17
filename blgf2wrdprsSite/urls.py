@@ -4,6 +4,6 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('',
-    url(r'^blogfa2wordpress/', include('blgf2wrdprs.urls')),
+    url(r'', include('blgf2wrdprs.urls')),
  
 )
