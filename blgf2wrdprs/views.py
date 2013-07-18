@@ -30,7 +30,7 @@ def contact(request):
             sendEmail(email,   fileName, siteName )
             # Process the data in form.cleaned_data
             # ...
-            return HttpResponseRedirect('/blogfa2wordpress/thanks') # Redirect after POST
+            return HttpResponseRedirect('/thanks') # Redirect after POST
     else:
         form = ContactForm() # An unbound form
     return render(request, 'contact.html', {
