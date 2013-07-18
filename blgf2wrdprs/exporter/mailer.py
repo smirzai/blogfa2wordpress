@@ -22,7 +22,8 @@ def sendEmail(you, fileName, website ):
    this_directory = os.path.dirname(__file__)
    
    textFile = file(os.path.join(this_directory, '../../textMessage.txt'))
-   text = textFile.read() % website + ".blogfa.ir"
+   testvar=str(website + ".blogfa.ir")
+   text = textFile.read() % testvar
    
 
    f = file(fileName+ ".zip", "rb")
