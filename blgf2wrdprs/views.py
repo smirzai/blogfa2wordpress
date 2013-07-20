@@ -25,6 +25,7 @@ def contact(request):
             siteName = form.cleaned_data["website"]
             fileName = "/tmp/" + siteName
             try:
+               logUsage(siteName, email)
                extractSite(siteName, fileName)
             except (urllib2.HTTPError, UnicodeEncodeError):
                print "Error site cannot be read"   
