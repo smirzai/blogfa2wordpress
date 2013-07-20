@@ -12,6 +12,10 @@ def compressFile(name, siteName):
    zippedFile = zipfile.ZipFile(name + ".zip", "w")
    zippedFile.write(name + ".xml", siteName + ".xml")
    zippedFile.close()
+
+def logUsage(siteName, email):
+   with open("usage.txt", "a") as myfile:
+      myfile.write(datetime.datetime.now() + ' : ' + siteName + ' : ' + email)  
  
 def contact(request):
     if request.method == 'POST': # If the form has been submitted...
