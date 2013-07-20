@@ -6,6 +6,7 @@ from blgf2wrdprs.forms import ContactForm
 from blgf2wrdprs.exporter.exportBlogfa27  import *
 from blgf2wrdprs.exporter.mailer import *
 import zipfile
+import datetime
 
 
 def compressFile(name, siteName):
@@ -14,8 +15,8 @@ def compressFile(name, siteName):
    zippedFile.close()
 
 def logUsage(siteName, email):
-   with open("usage.txt", "a") as myfile:
-      myfile.write(datetime.datetime.now() + ' : ' + siteName + ' : ' + email)  
+   with open("/tmp/httpd/usage.txt", "a") as myfile:
+      myfile.write(str(datetime.datetime.now()) + ' : ' + siteName + ' : ' + email+"\n")  
  
 def contact(request):
     if request.method == 'POST': # If the form has been submitted...
