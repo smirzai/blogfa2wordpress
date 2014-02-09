@@ -22,7 +22,7 @@ def sendEmail(you, fileName, website ):
    this_directory = os.path.dirname(__file__)
    
    textFile = file(os.path.join(this_directory, '../../textMessage.txt'))
-   testvar=str(website + ".blogfa.ir")
+   testvar=str(website + ".blogfa.com")
    text = textFile.read() % testvar
    
 

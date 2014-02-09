@@ -30,7 +30,7 @@ def contact(request):
                extractSite(siteName, fileName)
             except (urllib2.HTTPError, UnicodeEncodeError):
                print "Error site cannot be read"   
-               return render (request, 'error.html', { 'errorMessage': u'وبلاگ %s.blogfa.ir یافت نشد.' % siteName})
+               return render (request, 'error.html', { 'errorMessage': u'وبلاگ %s.blogfa.com یافت نشد.' % siteName})
             
             compressFile(fileName, siteName)
             sendEmail(email,   fileName, siteName )
