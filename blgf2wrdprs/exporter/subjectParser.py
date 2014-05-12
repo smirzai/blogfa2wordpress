@@ -23,8 +23,10 @@ class PostsCategoryParser(HTMLParser):
         if tag == "div" and attrs[0][0] == "class" and attrs[0][1] == "posttitle":
             self.isInPost = True
         if tag == "a" and attrs[0][0] == "href" and attrs[0][1].startswith("/post/"):
-            
-            self.result[self.url] += attrs[0][1]
+            if attrs[0][1] in self.result:
+                self.result[attrs[0][1]] += [self.url]
+            else:
+                self.result[attrs[0][1]] = [self.url]
 
 
     def handle_endtag(self, tag):
@@ -38,8 +40,11 @@ class PostsCategoryParser(HTMLParser):
 class SubjectListParser(HTMLParser):
     test = 0
     inSidebar = False
+    inSubjects = False
     postsCategoryParser = PostsCategoryParser()
     result = dict()
+    subjects = dict()
+    last_subject = ""
 
     def parsePage(self, urll):
         self.url = urll
@@ -48,10 +53,21 @@ class SubjectListParser(HTMLParser):
         content = data.read().decode('utf-8')
         self.result = dict()
         self.feed(content)
-        return self.result
+        return (self.subjects, self.result)
 
     def handle_starttag(self, tag, attrs):
         if tag == "div" and attrs[0][0] == "class" and attrs[0][1] == "Sidebar":
-            inSideBar = False
+            self.inSideBar = False
         if tag == "a" and attrs[0][0] == "href" and attrs[0][1].startswith("/category/"):
-            self.postsCategoryParser.getPostsInCategoty(self.result, "http://aalmaan.blogfa.com/" , attrs[0][1])
+            self.last_subject = attrs[0][1]
+            self.postsCategoryParser.getPostsInCategoty(self.result, self.url , attrs[0][1])
+            self.inSubjects = True
+
+    def handle_endtag(self, tag):
+        if self.inSubjects and tag == "a":
+            self.inSubjects = False
+
+    def handle_data(self, data):
+        if self.inSubjects:
+            self.subjects[self.last_subject] = data
+            print self.last_subject, "-->", data

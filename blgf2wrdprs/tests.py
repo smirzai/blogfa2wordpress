@@ -7,5 +7,6 @@ print ( "hello world")
 
 
 parser = SubjectListParser()
-result = parser.parsePage("http://aalmaan.blogfa.com")
-print result
+(subjects, result) = parser.parsePage("http://aalmaan.blogfa.com")
+print result['/post/48']
+print subjects['/category/24']
