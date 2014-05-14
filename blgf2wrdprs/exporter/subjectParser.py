@@ -13,20 +13,23 @@ class PostsCategoryParser(HTMLParser):
 
         data = urllib2.urlopen(base + url)
         content = data.read().decode('utf-8')
-        result[url] = []
+   #     result[url[5:-5]] = []
         self.result = result
         self.url = url
 
         self.feed(content)
 
     def handle_starttag(self, tag, attrs):
-        if tag == "div" and attrs[0][0] == "class" and attrs[0][1] == "posttitle":
+        if tag == "div" and attrs[0][0] == "class" and attrs[0][1] == "bodyposts":
             self.isInPost = True
-        if tag == "a" and attrs[0][0] == "href" and attrs[0][1].startswith("/post/"):
-            if attrs[0][1] in self.result:
-                self.result[attrs[0][1]] += [self.url]
+        if self.isInPost  and  tag == "a" and attrs[0][0] == "href" and attrs[0][1].startswith("/post"):
+            postNumber = attrs[0][1][6:-5]
+            subjectNumber = self.url[5:-5]
+            if postNumber in self.result:
+
+                self.result[postNumber] += [subjectNumber]
             else:
-                self.result[attrs[0][1]] = [self.url]
+                self.result[postNumber] = [subjectNumber]
 
 
     def handle_endtag(self, tag):
@@ -58,7 +61,7 @@ class SubjectListParser(HTMLParser):
     def handle_starttag(self, tag, attrs):
         if tag == "div" and attrs[0][0] == "class" and attrs[0][1] == "Sidebar":
             self.inSideBar = False
-        if tag == "a" and attrs[0][0] == "href" and attrs[0][1].startswith("/category/"):
+        if tag == "a" and attrs[0][0] == "href" and attrs[0][1].startswith("/cat-"):
             self.last_subject = attrs[0][1]
             self.postsCategoryParser.getPostsInCategoty(self.result, self.url , attrs[0][1])
             self.inSubjects = True
@@ -69,5 +72,5 @@ class SubjectListParser(HTMLParser):
 
     def handle_data(self, data):
         if self.inSubjects:
-            self.subjects[self.last_subject] = data
-            print self.last_subject, "-->", data
+            self.subjects[self.last_subject[5:-5]] = data
+

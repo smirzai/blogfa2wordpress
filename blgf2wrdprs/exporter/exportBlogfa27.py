@@ -17,6 +17,7 @@ import re
 from datetime import datetime
 from  jalali import JalaliToGregorian
 import codecs
+from  exporter.subjectParser import SubjectListParser
 
 smileys = (':)', # smile                1
            ':(', # sad                  2
@@ -57,7 +58,7 @@ def convertSmileys(str):
 
 outFile = ""
 
-def outputStart(title):
+def outputStart(title, subjects):
     outFile.write('<?xml version="1.0" encoding="UTF-8" ?>\n')
     outFile.write('<rss version="2.0\n');
     outFile.write('    xmlns:excerpt="http://wordpress.org/export/1.2/excerpt/"\n');
@@ -80,8 +81,8 @@ def outputStart(title):
     outFile.write('    <wp:base_blog_url>http://blog.saeidmirzaei.com</wp:base_blog_url>\n')
 
     outFile.write('    <wp:author><wp:author_id>1</wp:author_id><wp:author_login>admin</wp:author_login><wp:author_email>smirzai@gmail.com</wp:author_email><wp:author_display_name><![CDATA[admin]]></wp:author_display_name><wp:author_first_name><![CDATA[]]></wp:author_first_name><wp:author_last_name><![CDATA[]]></wp:author_last_name></wp:author>\n')
-
-    outFile.write('    <wp:category><wp:term_id>1</wp:term_id><wp:category_nicename>uncategorized</wp:category_nicename><wp:category_parent></wp:category_parent><wp:cat_name><![CDATA[Uncategorized]]></wp:cat_name></wp:category>\n')
+    for subject in subjects:
+        outFile.write('    <wp:category><wp:term_id>' + subject + '</wp:term_id><wp:category_nicename>' + subjects[subject] + '</wp:category_nicename><wp:category_parent></wp:category_parent><wp:cat_name><![CDATA[' + subjects[subject] + ']]></wp:cat_name></wp:category>\n')
 
     outFile.write('    <generator>http://wordpress.org/?v=3.5.1</generator>\n')
 
@@ -103,13 +104,16 @@ class PostListParser(HTMLParser):
     isInNavBar = 0
     navBarDepth = 0
     next = ""
+
   
     def setOutFile(self, name):
         global outFile
         outFile = codecs.open(name, "w",  'utf-8')
-        print(outFile)
 
-    def parsePage(self, urll):
+
+    def parsePage(self, urll, subjects, subjectMapping):
+        self.subjects = subjects
+        self.subjectMapping = subjectMapping
         self.url = urll
         u = urll + "/posts/"
         while (True):
@@ -165,8 +169,7 @@ class PostListParser(HTMLParser):
                 if tagsWithId:
 
                     if not tagsWithId[0].startswith("?p="):
-                        print(tagsWithId)
-                        MyHTMLParser().parsePage(self.url, tagsWithId[0])
+                        MyHTMLParser().parsePage(self.url, tagsWithId[0], self.subjects, self.subjectMapping)
 
                     return
 
@@ -181,7 +184,7 @@ class PostListParser(HTMLParser):
         if self.isInTitle:
             self.postTitle = data;
             if (not self.titleWritten):
-                outputStart(self.postTitle)
+                outputStart(self.postTitle, self.subjects)
                 self.titleWritten = 1
 
 
@@ -307,7 +310,7 @@ class CommentParser(HTMLParser):
 
         return str(int(dc.gyear // 1)) + '-' + str(int(dc.gmonth // 1)) + '-' + str(int(dc.gday)) + ' ' + tm + ':00'
 
-        print(commentTime)
+
 
     def outputComment(self, author, authorUrl, date, body):
         outFile.write('        <wp:comment>\n');
@@ -437,7 +440,7 @@ class MyHTMLParser(HTMLParser):
 
 
 
-    def  outputPost(self, postTitle, postContent, postUrl, postDateTime):
+    def  outputPost(self, postTitle, postContent, postUrl, postDateTime, subjects, subjectMapping):
         if (not postDateTime):
           postDateTime = datetime.today()
         postId =postUrl[6:-5]
@@ -464,7 +467,12 @@ class MyHTMLParser(HTMLParser):
         outFile.write('        <wp:post_type>post</wp:post_type>\n')
         outFile.write('        <wp:post_password></wp:post_password>\n')
         outFile.write('        <wp:is_sticky>0</wp:is_sticky>\n')
-        outFile.write('        <category domain="category" nicename="uncategorized"><![CDATA[Uncategorized]]></category>\n')
+
+
+        if postUrl[6:-5] in self.subjectMapping:
+            for subjectNumber in self.subjectMapping[postUrl[6:-5]]:
+                subjectTitle = self.subjects[subjectNumber]
+                outFile.write('        <category domain="category" nicename="' + subjectTitle + '"><![CDATA[' + subjectTitle + ']]></category>\n')
 
 
         curl =self.url + "/comments/?blogid="  +self.blogId + "&postid=" + postId
@@ -596,7 +604,7 @@ class MyHTMLParser(HTMLParser):
             self.getDateFromPostInfo(self.postInfo)
             self.postInfo = ""
 
-            self.outputPost(self.postTitle, self.postContent, self.postUrl, self.postDateTime)
+            self.outputPost(self.postTitle, self.postContent, self.postUrl, self.postDateTime, self.subjects, self.subjectMapping)
 
         elif self.isInPost and self.postLevel == self.divDepth:
             self.isInPost = 0
@@ -629,7 +637,9 @@ class MyHTMLParser(HTMLParser):
             self.getBlogIdFromInfo(data)
 
 
-    def  parsePage(self, urll, post):
+    def  parsePage(self, urll, post, subjects, subjectMapping):
+        self.subjectMapping = subjectMapping
+        self.subjects = subjects
 
         self.url = urll
 
@@ -646,11 +656,14 @@ class MyHTMLParser(HTMLParser):
 
 
 def extractSite(name, fileName):
-   siteFullName = 'http://' + name + ".blogfa.com"; 
+    siteFullName = 'http://' + name + ".blogfa.com";
 
-   print ("site full name=", siteFullName)
-   parser = PostListParser()
-   parser.setOutFile(fileName + ".xml")
-   parser.parsePage(siteFullName)
- #    MyHTMLParser().parsePage('http://shirazi.blogfa.com/')
+    subjectParser = SubjectListParser()
+    (subjects, result) = subjectParser.parsePage(siteFullName)
+
+
+    parser = PostListParser()
+    parser.setOutFile(fileName + ".xml")
+    parser.parsePage(siteFullName, subjects, result)
+
 
