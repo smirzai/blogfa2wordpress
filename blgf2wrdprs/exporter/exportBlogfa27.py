@@ -12,12 +12,11 @@
 #-------------------------------------------------------------------------------
 from HTMLParser import HTMLParser
 import urllib2
-from lxml import etree
 import re
 from datetime import datetime
 from  jalali import JalaliToGregorian
 import codecs
-from  exporter.subjectParser import SubjectListParser
+from  subjectParser import SubjectListParser
 
 smileys = (':)', # smile                1
            ':(', # sad                  2
