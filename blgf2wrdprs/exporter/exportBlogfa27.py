@@ -417,7 +417,7 @@ class MyHTMLParser(HTMLParser):
     def getDateFromPostInfo(self, info):
         m = re.search("[0-9]{4}/[0-9]{1,2}/[0-9]{1,2}", info)
         if (not m):
-           print("no input")
+           print("no input for input=" + info)
            return
         else:
             dateStr = m.group(0);
@@ -426,7 +426,7 @@ class MyHTMLParser(HTMLParser):
         m = re.search("[0-9]{1,2}:[0-9]{1,2}", info)
 
         if (not m):
-           print("no input")
+           print("no input2 for input=" + info)
            return
         else:
             timeStr = m.group(0)

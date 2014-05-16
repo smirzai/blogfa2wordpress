@@ -20,7 +20,7 @@ class PostsCategoryParser(HTMLParser):
         self.feed(content)
 
     def handle_starttag(self, tag, attrs):
-        if tag == "div" and attrs[0][0] == "class" and attrs[0][1] == "bodyposts":
+        if tag == "div" and len(attrs) > 0 and len(attrs[0]) > 1 and attrs[0][0] == "class" and attrs[0][1] == "bodyposts":
             self.isInPost = True
         if self.isInPost  and  tag == "a" and attrs[0][0] == "href" and attrs[0][1].startswith("/post"):
             postNumber = attrs[0][1][6:-5]
@@ -59,7 +59,8 @@ class SubjectListParser(HTMLParser):
         return (self.subjects, self.result)
 
     def handle_starttag(self, tag, attrs):
-        if tag == "div" and attrs[0][0] == "class" and attrs[0][1] == "Sidebar":
+
+        if tag == "div" and len(attrs) > 0 and len(attrs[0]) > 1 and attrs[0][0] == "class" and attrs[0][1] == "Sidebar":
             self.inSideBar = False
         if tag == "a" and attrs[0][0] == "href" and attrs[0][1].startswith("/cat-"):
             self.last_subject = attrs[0][1]
