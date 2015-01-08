@@ -11,18 +11,38 @@ class PostsCategoryParser(HTMLParser):
 
     def getPostsInCategoty(self, result, base, url):
 
-        data = urllib2.urlopen(base + url)
-        content = data.read().decode('utf-8')
-   #     result[url[5:-5]] = []
-        self.result = result
-        self.url = url
 
-        self.feed(content)
+
+        self.nextPage = ""
+        self.hasNextPage  = True
+        while self.hasNextPage:
+            self.hasNextPage = False
+            data = urllib2.urlopen(base + url + ("" if self.nextPage == "" else "?p=" + self.nextPage ))
+            content = data.read().decode('utf-8')
+       #     result[url[5:-5]] = []
+            self.result = result
+            self.url = url
+            self.isInH1 = False
+
+            self.feed(content)
 
     def handle_starttag(self, tag, attrs):
-        if tag == "div" and len(attrs) > 0 and len(attrs[0]) > 1 and attrs[0][0] == "class" and attrs[0][1] == "bodyposts":
-            self.isInPost = True
-        if self.isInPost  and  tag == "a" and len(attrs) > 0 and len(attrs[0]) > 0 and attrs[0][0] == "href" and attrs[0][1].startswith("/post"):
+
+        if tag == "h2" and len(attrs) > 0 and len(attrs[0]) > 1 and attrs[0][0] == "class" and attrs[0][1] == "hl":
+            self.isInH1 = True;
+            return
+
+        if not self.isInH1 and tag == "a" and len(attrs[0]) > 1 and attrs[0][0] == "href" and attrs[0][1].startswith('?'):
+            np = attrs[0][1][3:]
+            try:
+                np = int(np)
+            except:
+                return
+            if self.nextPage == "" or np > int(self.nextPage):
+                self.nextPage = str(np)
+                self.hasNextPage = True
+
+        if self.isInH1  and  tag == "a" and len(attrs) > 0 and len(attrs[0]) > 0 and attrs[0][0] == "href" and attrs[0][1].startswith("/post"):
             postNumber = attrs[0][1][6:-5]
             subjectNumber = self.url[5:-5]
             if postNumber in self.result:
@@ -30,11 +50,16 @@ class PostsCategoryParser(HTMLParser):
                 self.result[postNumber] += [subjectNumber]
             else:
                 self.result[postNumber] = [subjectNumber]
+            return
+
 
 
     def handle_endtag(self, tag):
-        if tag == "div":
-            self.isInPost = False
+        if self.isInH1 and tag == "h2":
+            self.isInH1 = False
+            return
+
+
 
 
 
@@ -62,6 +87,7 @@ class SubjectListParser(HTMLParser):
 
         if tag == "div" and len(attrs) > 0 and len(attrs[0]) > 1 and attrs[0][0] == "class" and attrs[0][1] == "Sidebar":
             self.inSideBar = False
+
         if tag == "a" and len(attrs) > 0 and len(attrs[0]) > 0 and attrs[0][0] == "href" and attrs[0][1].startswith("/cat-"):
             self.last_subject = attrs[0][1]
             self.postsCategoryParser.getPostsInCategoty(self.result, self.url , attrs[0][1])
