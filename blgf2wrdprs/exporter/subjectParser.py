@@ -32,7 +32,7 @@ class PostsCategoryParser(HTMLParser):
             self.isInH1 = True;
             return
 
-        if not self.isInH1 and tag == "a" and len(attrs[0]) > 1 and attrs[0][0] == "href" and attrs[0][1].startswith('?'):
+        if not self.isInH1 and tag == "a" and len(attrs) > 0 and len(attrs[0]) > 1 and attrs[0][0] == "href" and attrs[0][1].startswith('?'):
             np = attrs[0][1][3:]
             try:
                 np = int(np)
